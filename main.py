@@ -9,7 +9,9 @@ class ia2():
         self.biases = {} #Diccionario de umbrales.
         self.forwardPropagationResults = {} #Resultado de las salidas por iteración {i: yi}
         self.newValueNeurons = {} #Nuevos resultados de las neuronas con las funciones de activación.
+        self.data = {}
 
+        self.dataBaseGenerator()
         self.weightGenerator()
         self.biasGenerator()
         self.forwardPropagation()
@@ -37,8 +39,17 @@ class ia2():
                 for neuron in range(1, self.network[layer]+1):
                     self.biases[layer].append([neuron, round(random.random(), 8)])
         
+    def dataBaseGenerator(self):
+        for x in range(0, 50):
+            while True:
+                clave = random.randint(-1000, 1000)
+                if clave not in self.data:
+                    break
+            valor = 1 if clave >= 0 else 0
+            self.data[clave] = valor
+        print(self.data)
     def forwardPropagation(self):
-        
+        pass
         
 if __name__ == "__main__":
     ia2()
