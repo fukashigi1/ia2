@@ -1,20 +1,25 @@
 import random
 import pandas as pd
 
+#Red neuronal fija 1 input, 1 capa de 3 neuronas y una salida.
+
 class ia2():
     def __init__(self):
-
         self.network = {1: 1, 2: 3, 3: 1} #Red neuronal Clave=Capa Valor=Cantidad Neuronas.
         self.weightLayer = {} #Iniciar diccionario de capas de pesos.
         self.biases = {} #Diccionario de umbrales.
-        self.forwardPropagationResults = {} #Resultado de las salidas por iteración {i: yi}
-        self.newValueNeurons = {} #Nuevos resultados de las neuronas con las funciones de activación.
-        self.data = {}
+        self.used = [] #Chequea que ya se ha usado ese key
+        self.newValuesNeurons = {} #Lugar para almacenar las neuronas con su activación.
+        self.data = {} #database
+        self.dataList = [] #keys a lista.
+        self.finalsY = {}
 
         self.dataBaseGenerator()
+        self.dataToList()
         self.weightGenerator()
         self.biasGenerator()
-        self.forwardPropagation()
+        for i in range(len(self.data)):
+            self.finalsY[i] = self.forwardPropagation() # puedo hacer los lotes iterando entre finalsY calculando el descenso de gradiente para cada valor y sacando el promedio.
 
     def weightGenerator(self):
         for layer in range(1, len(self.network)):
@@ -47,9 +52,48 @@ class ia2():
                     break
             valor = 1 if clave >= 0 else 0
             self.data[clave] = valor
-        print(self.data)
+
+    def dataToList(self): #Este metodo transforma el diccionario self.data en una lista que almacena los valores de X
+        for key in self.data:
+            self.dataList.append(key)
+
     def forwardPropagation(self):
-        pass
-        
+        def sigmoidActivation(value):
+            return 1 / (1 + pow(2.71828, -value))
+
+        def inputValue(value):
+            convertedValue = (value - min(self.dataList))/(max(self.dataList) - min(self.dataList))
+            return round(convertedValue, 8)
+
+        for layer in self.biases:
+            self.newValuesNeurons[layer] = []
+            for neuron in self.biases[layer]:
+                if layer == 1:
+                    for key, value in self.data.items():
+                        if key in self.used:
+                            pass
+                        else:
+                            self.newValuesNeurons[layer].append([neuron[0], inputValue(key)])
+                            self.used.append(key)
+                            break
+                if layer == 2:
+                    for weightLayer in self.weightLayer:
+                        for weight in self.weightLayer[weightLayer]:
+                            if weightLayer == layer-1 and weight[2] == neuron[0]:
+                                self.newValuesNeurons[layer].append([neuron[0], round(sigmoidActivation((weight[0]*self.newValuesNeurons[1][0][1]) + neuron[1]), 8)])
+                if layer == 3:
+                    fx=[] #multiplication
+                    for weightLayer in self.weightLayer:
+                        for weight in self.weightLayer[weightLayer]:
+                            if weightLayer == layer-1 and weight[2] == neuron[0]:
+                                for stepBackNeuron in self.newValuesNeurons[layer - 1]:
+                                    if stepBackNeuron[0] == weight[1]:
+                                        fx.append(round(weight[0]*stepBackNeuron[1], 8))
+                    sumatory = 0
+                    for value in fx:
+                        sumatory += value
+                    self.newValuesNeurons[layer].append([neuron[0], round(sigmoidActivation(sumatory + neuron[1]), 8)])
+
+        return self.newValuesNeurons[3][0][1]
 if __name__ == "__main__":
     ia2()
