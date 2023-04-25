@@ -1,5 +1,4 @@
 import random
-import pandas as pd
 
 #Red neuronal fija 1 input, 1 capa de 3 neuronas y una salida.
 
@@ -13,13 +12,26 @@ class ia2():
         self.data = {} #database
         self.dataList = [] #keys a lista.
         self.finalsY = {}
+        self.batch = 5
+        self.learnRate = 0.01
+        self.batchCount = {}
 
         self.dataBaseGenerator()
         self.dataToList()
         self.weightGenerator()
         self.biasGenerator()
-        for i in range(len(self.data)):
-            self.finalsY[i] = self.forwardPropagation() # puedo hacer los lotes iterando entre finalsY calculando el descenso de gradiente para cada valor y sacando el promedio.
+
+        for i in range(len(self.data)):#lotes lotes
+            if (i+1) % self.batch == 0:
+                print("nuevo batch")
+                dicvalues = list(self.data.values())
+                
+                for z in range(i - 4, (i - 4) + self.batch):
+                    self.finalsY[i] = self.forwardPropagation() 
+                    self.batchCount[z] = self.backPropagation(dicvalues[z], self.finalsY[i])
+                #falta promediar los batches y cambiar los pesos cada 5 iteraciones. (batchs)
+                
+        print(self.batchCount)
 
     def weightGenerator(self):
         for layer in range(1, len(self.network)):
@@ -45,7 +57,7 @@ class ia2():
                     self.biases[layer].append([neuron, round(random.random(), 8)])
         
     def dataBaseGenerator(self):
-        for x in range(0, 50):
+        for x in range(0, 100):
             while True:
                 clave = random.randint(-1000, 1000)
                 if clave not in self.data:
@@ -58,6 +70,7 @@ class ia2():
             self.dataList.append(key)
 
     def forwardPropagation(self):
+        self.newValuesNeurons.clear()
         def sigmoidActivation(value):
             return 1 / (1 + pow(2.71828, -value))
 
@@ -76,11 +89,13 @@ class ia2():
                             self.newValuesNeurons[layer].append([neuron[0], inputValue(key)])
                             self.used.append(key)
                             break
+
                 if layer == 2:
                     for weightLayer in self.weightLayer:
                         for weight in self.weightLayer[weightLayer]:
                             if weightLayer == layer-1 and weight[2] == neuron[0]:
                                 self.newValuesNeurons[layer].append([neuron[0], round(sigmoidActivation((weight[0]*self.newValuesNeurons[1][0][1]) + neuron[1]), 8)])
+
                 if layer == 3:
                     fx=[] #multiplication
                     for weightLayer in self.weightLayer:
@@ -93,7 +108,47 @@ class ia2():
                     for value in fx:
                         sumatory += value
                     self.newValuesNeurons[layer].append([neuron[0], round(sigmoidActivation(sumatory + neuron[1]), 8)])
-
         return self.newValuesNeurons[3][0][1]
+    
+    def backPropagation(self, S, Y):
+        def convertValue(value):
+            return round(value * (1 - value), 8)
+        
+        gradientDescend = [] 
+        dedy = -(S - Y)
+        for layer in reversed(self.weightLayer):
+            print(f'Layer {layer}')
+            for weight in reversed(self.weightLayer[layer]):
+                ecuation = []
+                if layer == 2:
+                    ecuation.append(convertValue(Y))
+                    for neuron in self.newValuesNeurons[2]:
+                        if weight[1] == neuron[0]:
+                            ecuation.append(neuron[1])
+                    dydw = 1
+                    for multiplication in ecuation:
+                        dydw = dydw * multiplication
+                    dedw = dedy * dydw
+                    newWeight = weight[0] - self.learnRate * dedw
+                    gradientDescend.append([round(newWeight, 8), weight[1], weight[2]])
+                if layer == 1:
+                    ecuation.append(convertValue(Y))
+                    for neuron in self.newValuesNeurons[1]:
+                        ecuation.append(neuron[1])
+                    for neuron in self.newValuesNeurons[2]:
+                        if weight[2] == neuron[0]:
+                            ecuation.append(neuron[1])
+                            for otherWeight in self.weightLayer[2]:
+                                if otherWeight[1] == neuron[0]:
+                                    ecuation.append(otherWeight[0])
+                    dydw = 1
+                    for multiplication in ecuation:
+                        dydw = dydw * multiplication
+                    dedw = dedy * dydw
+                    newWeight = weight[0] - self.learnRate * dedw
+                    gradientDescend.append([round(newWeight, 8), weight[1], weight[2]])
+        return gradientDescend
+    
+            
 if __name__ == "__main__":
     ia2()
