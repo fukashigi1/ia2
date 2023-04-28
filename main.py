@@ -13,25 +13,82 @@ class ia2():
         self.dataList = [] #keys a lista.
         self.finalsY = {}
         self.batch = 5
-        self.learnRate = 0.01
+        self.learnRate = 0.1
         self.batchCount = {}
+        self.gradientDescend = {} #key: batch, value: [new weigts]
 
         self.dataBaseGenerator()
         self.dataToList()
         self.weightGenerator()
         self.biasGenerator()
 
+        self.batchPointer = 0
         for i in range(len(self.data)):#lotes lotes
             if (i+1) % self.batch == 0:
-                print("nuevo batch")
+                print(f'Batch {self.batchPointer + 1} -----------------------------------------')
                 dicvalues = list(self.data.values())
                 
                 for z in range(i - 4, (i - 4) + self.batch):
                     self.finalsY[i] = self.forwardPropagation() 
                     self.batchCount[z] = self.backPropagation(dicvalues[z], self.finalsY[i])
                 #falta promediar los batches y cambiar los pesos cada 5 iteraciones. (batchs)
-                
-        print(self.batchCount)
+
+                _0 = 0
+                _1 = 0
+                _2 = 0
+                _3 = 0
+                _4 = 0
+                _5 = 0
+
+                for x in range(i - 4, (i - 4) + self.batch):
+                    pointer = 0
+                    for index in self.batchCount[x]:
+                        if pointer == 0:
+                            _0 = _0 + index[0]
+                        if pointer == 1:
+                            _1 = _1 + index[0]
+                        if pointer == 2:
+                            _2 = _2 + index[0]
+                        if pointer == 3:
+                            _3 = _3 + index[0]
+                        if pointer == 4:
+                            _4 = _4 + index[0]
+                        if pointer == 5:
+                            _5 = _5 + index[0]
+                        pointer += 1
+                    
+                _0 = _0 / self.batch
+                _1 = _1 / self.batch
+                _2 = _2 / self.batch
+                _3 = _3 / self.batch
+                _4 = _4 / self.batch
+                _5 = _5 / self.batch
+                print(_0)
+                print(_1)
+                print(_2)
+                print(_3)
+                print(_4)
+                print(_5)
+                print("----------------")
+                #recorrer el for al reves self.weightlayer
+                for layer in reversed(self.weightLayer):
+                    pointer = 2
+                    for weight in reversed(self.weightLayer[layer]):
+                        print(weight)
+                        if pointer == 2 and layer == 2:
+                           self.weightLayer[layer][pointer] = [round(_0, 8), 3, 1]
+                        if pointer == 1 and layer == 2:
+                            self.weightLayer[layer][pointer] = [round(_1, 8), 2, 1]
+                        if pointer == 0 and layer == 2:
+                            self.weightLayer[layer][pointer] = [round(_2, 8), 1, 1]
+                        if pointer == 2 and layer == 1:
+                            self.weightLayer[layer][pointer] = [round(_3, 8), 1, 3]
+                        if pointer == 1 and layer == 1:
+                            self.weightLayer[layer][pointer] = [round(_4, 8), 1, 2]
+                        if pointer == 0 and layer == 1:
+                            self.weightLayer[layer][pointer] = [round(_5, 8), 1, 1]
+                        pointer -=1
+                self.batchPointer += 1
 
     def weightGenerator(self):
         for layer in range(1, len(self.network)):
@@ -45,7 +102,7 @@ class ia2():
                         self.weightLayer[layer][pointer].append(i)
                         self.weightLayer[layer][pointer].append(j)
                         pointer = pointer +1
-
+        print(self.weightLayer)
     def biasGenerator(self):
         for layer in self.network:
             self.biases[layer] = []
@@ -117,7 +174,6 @@ class ia2():
         gradientDescend = [] 
         dedy = -(S - Y)
         for layer in reversed(self.weightLayer):
-            print(f'Layer {layer}')
             for weight in reversed(self.weightLayer[layer]):
                 ecuation = []
                 if layer == 2:
